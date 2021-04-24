@@ -134,11 +134,10 @@ def emotion_recognizer(image, x, y, w, h):
         face = img_to_array(face)
         face = np.expand_dims(face, axis=0)
 
-    prediction = classifier.predict(roi)[0]
+    prediction = classifier.predict(face)[0]
     result = class_labels[prediction.argmax()]
     print("Result")
 
 
 
-# live_recognise("arya")
-print(read_img(r"C:\Users\aryap\Downloads\UP\flower.jpg")
+# Call functions
