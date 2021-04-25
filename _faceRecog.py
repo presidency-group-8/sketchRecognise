@@ -1,13 +1,15 @@
-import face_recognition
 import cv2 as cv
+import dlib as dl
+import face_recognition
 import os
 
 from keras.models import load_model
 from keras.preprocessing.image import img_to_array
 import numpy as np
-classifier = load_model("Emotion_Detection.h5")
-class_labels = ['Angry', 'Happy', 'Neutral', 'Sad', 'Surprise']
 
+face_detector_model = dl.get_frontal_face_detector()
+classifier = load_model("Emotion_Detection.h5")
+class_labels = ['Angry', 'Happy', 'Neutral', 'Sad', 'Surprised']
 
 def read_img(path):
     img = cv.imread(path)
@@ -124,20 +126,51 @@ def video_recognise(vid, sketch):
             break
 
 
-def emotion_recognizer(image, x, y, w, h):
+def emotion_recognizer(image, left, top, right, bottom):
     image = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
-    face = image[y:y+h, x:x+w]
+    face = image[top:bottom, left:right]
     face = cv.resize(face, (48, 48), interpolation=cv.INTER_AREA)
-
     if np.sum([face]):
         face = face.astype('float') / 255.0
         face = img_to_array(face)
         face = np.expand_dims(face, axis=0)
-
     prediction = classifier.predict(face)[0]
     result = class_labels[prediction.argmax()]
-    print("Result")
+    return result
 
 
+def image_emotion_recognizer(image):
+    if not image:
+        return
+    image = read_img(image)
+    detected_faces = face_detector_model(image, 1)
+    for face in detected_faces:
+        top = face.top()
+        left = face.left()
+        bottom = face.bottom()
+        right = face.right()
+        result = emotion_recognizer(image, left, top, right, bottom)
+        cv.rectangle(image, (left, top), (right, bottom), (0, 255, 0), 2)
+        cv.putText(image, result, (left + 5, top - 5), cv.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+    cv.imshow("EMOTION RECOGNITION: 'q' to exit", image)
+    cv.waitKey(0)
+    cv.destroyAllWindows()
 
-# Call functions
+
+def live_emotion_recognizer():
+    cam = cv.VideoCapture(0)
+    while True:
+        success, frame = cam.read()
+        detected_faces = face_detector_model(frame, 1)
+        for face in detected_faces:
+            top = face.top()
+            left = face.left()
+            bottom = face.bottom()
+            right = face.right()
+            result = emotion_recognizer(frame, left, top, right, bottom)
+            cv.rectangle(frame, (left,top), (right,bottom), (0,255,0), 2)
+            cv.putText(frame, result, (left+5,top-5), cv.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2)
+        cv.imshow("LIVE EMOTION RECOGNITION - Press 'q' to exit", frame)
+        if cv.waitKey(10) == ord('q'):
+            cv.destroyAllWindows()
+            break
