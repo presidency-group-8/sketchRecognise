@@ -11,6 +11,7 @@ face_detector_model = dl.get_frontal_face_detector()
 classifier = load_model("Emotion_Detection.h5")
 class_labels = ['Angry', 'Happy', 'Neutral', 'Sad', 'Surprised']
 
+
 def read_img(path):
     img = cv.imread(path)
     (h, w) = img.shape[:2]
@@ -22,107 +23,114 @@ def read_img(path):
 
 
 def encodings_of_image_database(known_images_db):
-    known_encoding = []
+    known_encodings = []
     names = os.listdir(known_images_db)
     for file in names:
         print(file)
-        img = read_img(f"{known_images_db}/{file}")
+        img = read_img(known_images_db + file)
         encode = face_recognition.face_encodings(img)[0]
         print("Working...\n")
-        known_encoding.append(encode)
-    return known_encoding
+        known_encodings.append(encode)
+    return known_encodings
 
 
 def encodings_of_sketch(sketch):
     img = read_img(f"{sketch}")
-    cv.imshow("Uploaded Sketch", img)
-    sketch_encode = face_recognition.face_encodings(img)[0]
-    return sketch_encode
+    try:
+        sketch_encode = face_recognition.face_encodings(img)[0]
+    except Exception:
+        return "error"
+    else:
+        return sketch_encode
 
 
 def image_matching(known_encoding, sketch_encode, known_images_db):
     image_list = os.listdir(known_images_db)
     res = face_recognition.compare_faces(known_encoding, sketch_encode)
-    print(image_list)
     count = 0
     for i in range(len(res)):
         if res[i]:
             count += 1
-            print(f"Matched image is {image_list[i]}")
-            img = read_img(f"{known_images_db}/+{image_list[i]}")
-            cv.imshow(f"Matched Image {count}", img)
+            img = read_img(known_images_db + image_list[i])
+            cv.imshow(f"Matched Image {count} - {image_list[i]}", img)
     if count == 0:
-        print("No match found in the database")
+        return "no_match"
     cv.waitKey(0)
 
 
-def live_recognise(sketch, cam_code):
-    sketch = read_img(f"imageCollection/{sketch}.jpeg")
+def image_sketch_recognizer(sketch):
+    database = "C:/Users/aryap/Documents/Python Scripts/sketchRecognise/image_database/"
+    sketch_encode = encodings_of_sketch(sketch)
+    if sketch_encode == "error":
+        return "no_match"
+    known_encodings = encodings_of_image_database(database)
+    return image_matching(known_encodings, sketch_encode, database)
+
+
+def video_sketch_recognizer(sketch, vid):
+    sketch = read_img(sketch)
     sketch_encode = face_recognition.face_encodings(sketch)
-    print("\n\nREADY\n")
-    cam = cv.VideoCapture(cam_code)
+    if not sketch_encode:
+        cv.destroyAllWindows()
+        return "no_match"
+
+    frame_count = 0
+    cam = cv.VideoCapture(vid)
     while True:
         success, image = cam.read()
+        if not success:
+            return frame_count
         img = cv.cvtColor(image, cv.COLOR_BGR2RGB)
-
-        # face_68_points = face_recognition.face_landmarks(img)
-        # for key in face_68_points:
-        #     print(list(key.values()))
 
         face_loc = face_recognition.face_locations(img)
         encode = []
         try:
             encode = face_recognition.face_encodings(img, face_loc)
         except Exception:
-            print("Error")
+            print("No Faces")
 
         for code, loc in zip(encode, face_loc):
             matches = face_recognition.compare_faces(sketch_encode, code)
-            # print(matches)
-            # faceDistance = face_recognition.face_distance(sketch_encode, code)
-            # print(faceDistance)  # Lowest distance is best match
-            # match = np.argmin(faceDistance)
-            # name = names[match]
-            # print(name)
-
             if matches[0]:
                 y1, x2, y2, x1 = loc
                 cv.rectangle(image, (x1, y1), (x2, y2), (0, 255, 0), 3)
                 cv.putText(image, "Match", (x1+10, y1-10), cv.FONT_HERSHEY_COMPLEX, 1, (0, 255, 0), 2)
+                frame_count += 1
+                cv.imwrite(f"matches/vid{frame_count}.jpeg", image)
 
-        cv.imshow("LIVE", image)
+        cv.imshow("Sketch Recognition - Press 'q' to exit", image)
 
         if cv.waitKey(10) == ord('q'):
+            cv.destroyAllWindows()
             break
 
 
-def video_recognise(vid, sketch):
-    sketch = read_img(f"imageCollection/{sketch}.jpeg")
+def live_sketch_recognizer(sketch, cam_code):
+    sketch = read_img(sketch)
     sketch_encode = face_recognition.face_encodings(sketch)
-    print("\n\nREADY\n")
-    cam = cv.VideoCapture(vid)
+
+    cam = cv.VideoCapture(cam_code)
     while True:
         success, image = cam.read()
-        img = cv.cvtColor(image, cv.COLOR_BGR2RGB)
+        if sketch_encode:
+            img = cv.cvtColor(image, cv.COLOR_BGR2RGB)
+            face_loc = face_recognition.face_locations(img)
+            encode = []
+            try:
+                encode = face_recognition.face_encodings(img, face_loc)
+            except Exception:
+                print("No faces")
 
-        face_loc = face_recognition.face_locations(img)
-        encode = []
-        try:
-            encode = face_recognition.face_encodings(img, face_loc)
-        except Exception:
-            print("Error")
+            for code, loc in zip(encode, face_loc):
+                matches = face_recognition.compare_faces(sketch_encode, code)
+                if matches[0]:
+                    y1, x2, y2, x1 = loc
+                    cv.rectangle(image, (x1, y1), (x2, y2), (0, 255, 0), 3)
+                    cv.putText(image, "Match", (x1+10, y1-10), cv.FONT_HERSHEY_COMPLEX, 1, (0, 255, 0), 2)
 
-        for code, loc in zip(encode, face_loc):
-            matches = face_recognition.compare_faces(sketch_encode, code)
-
-            if matches[0]:
-                y1, x2, y2, x1 = loc
-                cv.rectangle(image, (x1, y1), (x2, y2), (0, 255, 0), 3)
-                cv.putText(image, "Caught", (x1+10, y1-10), cv.FONT_HERSHEY_COMPLEX, 1, (0, 255, 0), 2)
-                cv.imwrite("location\vid.jpeg", image)
-        cv.imshow("LIVE", image)
-
+        cv.imshow("LIVE SKETCH RECOGNITION - Press 'q' to exit", image)
         if cv.waitKey(10) == ord('q'):
+            cv.destroyAllWindows()
             break
 
 
@@ -140,6 +148,7 @@ def emotion_recognizer(image, left, top, right, bottom):
 
 
 def image_emotion_recognizer(image):
+    print(image)
     if not image:
         return
     image = read_img(image)
@@ -168,8 +177,8 @@ def live_emotion_recognizer():
             bottom = face.bottom()
             right = face.right()
             result = emotion_recognizer(frame, left, top, right, bottom)
-            cv.rectangle(frame, (left,top), (right,bottom), (0,255,0), 2)
-            cv.putText(frame, result, (left+5,top-5), cv.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2)
+            cv.rectangle(frame, (left, top), (right, bottom), (0, 255, 0), 2)
+            cv.putText(frame, result, (left+5, top-5), cv.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
         cv.imshow("LIVE EMOTION RECOGNITION - Press 'q' to exit", frame)
         if cv.waitKey(10) == ord('q'):
             cv.destroyAllWindows()
