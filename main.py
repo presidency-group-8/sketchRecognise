@@ -9,6 +9,7 @@ import _recognizer as recognizer
 main_bg = "rgb(7,44,80)"
 secondary_bg = "rgb(8,8,82)"
 ternary_bg = "rgb(210,48,44)"
+sketch = None
 
 
 # Dialog Box
@@ -28,10 +29,20 @@ def dialog_box(ico, title, body):
     return dialog.exec_()
 
 
-def get_img():
-    img_format = ["jpg", "jpeg", "png", "jfif", "bmp", "ico"]
-    img = list(QFileDialog.getOpenFileNames(None, "Select image", r"C:/Users/aryap/Downloads/"))
+# Choose image/ video from explorer
+def get_img(vid=0):
+    if vid:
+        img = list(QFileDialog.getOpenFileNames(None, "Select Video", r"C:/"))
+        source = str(img[0])[2:-2]
+        if source.split(".")[-1] == "mp4":
+            return source
+        else:
+            dialog_box("error", "Invalid File !", "Please choose a video of .mp4 format only")
+            return None
+    img = list(QFileDialog.getOpenFileNames(None, "Select image", r"C:/"))
     source = str(img[0])[2:-2]
+    # If video
+    img_format = ["jpg", "jpeg", "png", "jfif", "bmp", "ico"]
     # Error if file is not an Image
     if source.split(".")[-1] not in img_format:
         dialog_box("error", "Invalid File !", "Please choose an image of .jpg, .jpeg, .jfif, .png, .bmp, or .ico only")
@@ -39,10 +50,11 @@ def get_img():
     return source
 
 
+# Upload an image into DB
 def move_to_database():
     source = get_img()
     if source:
-        database = "C:/Users/aryap/Documents/Python Scripts/sketchRecognise/knownImages/"
+        database = "C:/Users/aryap/Documents/Python Scripts/sketchRecognise/image_database/"
         source, database = source.replace("/", "\\"), database.replace("/", "\\")
         sure = dialog_box("question", "Sure ?", "Do you want to upload your selection?")
         if sure == 16384:
@@ -51,7 +63,42 @@ def move_to_database():
                 dialog_box("success", "Success !", "The image has been uploaded into the database successfully")
             else:
                 dialog_box("error", "Error !", "There was some error while accessing the database")
-    return
+    return None
+
+
+# Upload sketch
+def upload_sketch():
+    global sketch
+    sketch = get_img()
+    if sketch:
+        dialog_box("success", "Success !", "The Sketch has been uploaded successfully")
+    else:
+        dialog_box("error", "Failure !", "There was some error while adding the sketch")
+
+
+# Sketch recognition
+def sketch_recognition(flag):
+    if not sketch:
+        dialog_box("warn", "No Sketch found !", "Please upload a sketch first")
+        return
+
+    print(sketch)
+    if flag == "live":
+        recognizer.live_sketch_recognizer(sketch, 0)
+
+    elif flag == "video":
+        video = get_img(1)
+        if not video:
+            return
+        match = recognizer.video_sketch_recognizer(sketch, video)
+        if match == "no_match" or match == 0:
+            dialog_box("success", "No match !", "No match found for the uploaded sketch")
+        else:
+            dialog_box("success", f"{match} Matches found !", "All matches are saved in ./sketchRecognise/matches/")
+
+    else:
+        if recognizer.image_sketch_recognizer(sketch) == "no_match":
+            dialog_box("success", "No match !", "No match found for the uploaded sketch")
 
 
 # Main Class
@@ -80,7 +127,10 @@ class UserInterface(object):
 
         self.sketch_page = QtWidgets.QWidget()
         self.sketch_head = QtWidgets.QLabel(self.sketch_page)
+        self.sketch_body = QtWidgets.QLabel(self.sketch_page)
         self.sketch_browse_btn = QtWidgets.QPushButton(self.sketch_page)
+        self.sketch_start_btn = QtWidgets.QPushButton(self.sketch_page)
+        self.sketch_vid_btn = QtWidgets.QPushButton(self.sketch_page)
         self.sketch_live_btn = QtWidgets.QPushButton(self.sketch_page)
 
         self.emotion_page = QtWidgets.QWidget()
@@ -170,7 +220,7 @@ class UserInterface(object):
         # Home Page
         self.home_page.setStyleSheet(f"background-color: {main_bg};")
         self.home_page.setObjectName("home_page")
-        # Home heading
+        # Home Head
         self.home_head.setGeometry(QtCore.QRect(150, 10, 571, 55))
         self.home_head.setStyleSheet(f"border:none; font-size:40px; color: rgb(255,255,0); font-variant: small-caps")
         self.home_head.setText("Sketch and Emotion Recognition")
@@ -206,21 +256,40 @@ class UserInterface(object):
         self.sketch_page.setStyleSheet(f"background-color: {main_bg};")
         self.sketch_page.setObjectName("sketch_page")
         # Sketch Head
-        self.sketch_head.setGeometry(QtCore.QRect(250, 10, 571, 51))
+        self.sketch_head.setGeometry(QtCore.QRect(150, 10, 571, 55))
         self.sketch_head.setStyleSheet(f"border:none; font-size:40px; color: rgb(255,255,0); font-variant: small-caps")
         self.sketch_head.setText("Sketch Recognition")
         self.sketch_head.setObjectName("sketch_head")
+        # Sketch Body
+        self.sketch_body.setGeometry(QtCore.QRect(150, 80,   750, 200))
+        self.sketch_body.setStyleSheet(f"border:none; font-size:18px; color: rgb(255,255,0);")
+        self.sketch_body.setText("Please upload the Sketch first using UPLOAD SKETCH."
+                                 "\nTo recognize the person in the sketch use START RECOGNITION."
+                                 "\nTo recognize the sketch live use LIVE RECOGNITION.")
+        self.sketch_body.setObjectName("sketch_body")
         # Sketch Browse Button
-        self.sketch_browse_btn.setGeometry(QtCore.QRect(300, 140, 171, 41))
+        self.sketch_browse_btn.setGeometry(QtCore.QRect(150, 270, 500, 50))
         self.sketch_browse_btn.setStyleSheet(btn_style_2)
-        self.sketch_browse_btn.setText("BROWSE")
-        self.sketch_browse_btn.clicked.connect(lambda: get_img())
+        self.sketch_browse_btn.setText("UPLOAD SKETCH")
+        self.sketch_browse_btn.clicked.connect(lambda: upload_sketch())
         self.sketch_browse_btn.setObjectName("sketch_browse_btn")
-        # Sketch Live Button
-        self.sketch_live_btn.setGeometry(QtCore.QRect(300, 320, 171, 41))
+        # Sketch Start Button
+        self.sketch_start_btn.setGeometry(QtCore.QRect(150, 340, 245, 50))
+        self.sketch_start_btn.setStyleSheet(btn_style_2)
+        self.sketch_start_btn.setText("START RECOGNITION")
+        self.sketch_start_btn.clicked.connect(lambda: sketch_recognition(""))
+        self.sketch_start_btn.setObjectName("sketch_start_btn")
+        # Sketch Video Button
+        self.sketch_vid_btn.setGeometry(QtCore.QRect(400, 340, 245, 50))
+        self.sketch_vid_btn.setStyleSheet(btn_style_2)
+        self.sketch_vid_btn.setText("VIDEO RECOGNITION")
+        self.sketch_vid_btn.clicked.connect(lambda: sketch_recognition("video"))
+        self.sketch_vid_btn.setObjectName("sketch_vid_btn")
+        # Sketch Live sketch_start_btn
+        self.sketch_live_btn.setGeometry(QtCore.QRect(150, 410, 500, 50))
         self.sketch_live_btn.setStyleSheet(btn_style_2)
-        self.sketch_live_btn.setText("LIVE")
-        self.sketch_live_btn.clicked.connect(lambda: get_img())
+        self.sketch_live_btn.setText("LIVE RECOGNITION")
+        self.sketch_live_btn.clicked.connect(lambda: sketch_recognition("live"))
         self.sketch_live_btn.setObjectName("sketch_live_btn")
 
         # Button for EMOTION PAGE
@@ -232,16 +301,16 @@ class UserInterface(object):
         # Emotion Page
         self.emotion_page.setStyleSheet(f"background-color: {main_bg});")
         self.emotion_page.setObjectName("emotion_page")
-        # Emotion heading
-        self.emotion_head.setGeometry(QtCore.QRect(250, 10, 571, 55))
+        # Emotion Head
+        self.emotion_head.setGeometry(QtCore.QRect(150, 10, 571, 55))
         self.emotion_head.setStyleSheet(f"border:none; font-size:40px; color: rgb(255,255,0); font-variant: small-caps")
         self.emotion_head.setText("Emotion Recognition")
         self.emotion_head.setObjectName("emotion_head")
-        # Emotion body
+        # Emotion Body
         self.emotion_body.setGeometry(QtCore.QRect(150, 80, 750, 200))
         self.emotion_body.setStyleSheet(f"border:none; font-size:18px; color: rgb(255,255,0);")
         self.emotion_body.setText("To recognize the emotion of a Human in an image, click on\nBrowse Image."
-                                  "\nTo recognize emotions Live, click on LIVE Recognition.\n  ")
+                                  "\n\nTo recognize emotions Live, click on LIVE Recognition.\n")
         self.emotion_body.setObjectName("emotion_body")
         # Emotion Browse Button
         self.emotion_browse_btn.setGeometry(QtCore.QRect(150, 280, 500, 50))
@@ -294,9 +363,6 @@ class UserInterface(object):
 
         # Add Window into Central Layout
         main_window.setCentralWidget(self.central_widget)
-
-
-
 
         # Stack Pages
         self.stacked_widget.setGeometry(QtCore.QRect(-1, 9, 681, 461))
