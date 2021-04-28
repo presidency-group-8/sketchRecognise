@@ -31,21 +31,20 @@ def dialog_box(ico, title, body):
 
 # Choose image/ video from explorer
 def get_img(vid=0):
+    # If video
     if vid:
-        img = list(QFileDialog.getOpenFileNames(None, "Select Video", r"C:/"))
-        source = str(img[0])[2:-2]
+        source = QFileDialog.getOpenFileName(None, "Select Video", r"C:/")[0]
         if source.split(".")[-1] == "mp4":
             return source
         else:
             dialog_box("error", "Invalid File !", "Please choose a video of .mp4 format only")
             return None
-    img = list(QFileDialog.getOpenFileNames(None, "Select image", r"C:/"))
-    source = str(img[0])[2:-2]
-    # If video
+    source = list(QFileDialog.getOpenFileName(None, "Select image", r"C:/"))[0]
     img_format = ["jpg", "jpeg", "png", "jfif", "bmp", "ico"]
     # Error if file is not an Image
     if source.split(".")[-1] not in img_format:
-        dialog_box("error", "Invalid File !", "Please choose an image of .jpg, .jpeg, .jfif, .png, .bmp, or .ico only")
+        dialog_box("error", "Invalid File !", "Please choose an image of "
+                                              ".jpg, .jpeg, .jfif, .png, .bmp, or .ico format only")
         return None
     return source
 
@@ -54,7 +53,7 @@ def get_img(vid=0):
 def move_to_database():
     source = get_img()
     if source:
-        database = "C:/Users/aryap/Documents/Python Scripts/sketchRecognise/image_database/"
+        database = "image_database/"
         source, database = source.replace("/", "\\"), database.replace("/", "\\")
         sure = dialog_box("question", "Sure ?", "Do you want to upload your selection?")
         if sure == 16384:
@@ -84,21 +83,32 @@ def sketch_recognition(flag):
 
     print(sketch)
     if flag == "live":
-        recognizer.live_sketch_recognizer(sketch, 0)
+        if dialog_box("question", "Permission to access camera !", "Do you permit to use your camera?") == 16384:
+            recognizer.live_sketch_recognizer(sketch, 0)
+        return
 
     elif flag == "video":
         video = get_img(1)
         if not video:
             return
-        match = recognizer.video_sketch_recognizer(sketch, video)
-        if match == "no_match" or match == 0:
-            dialog_box("success", "No match !", "No match found for the uploaded sketch")
-        else:
-            dialog_box("success", f"{match} Matches found !", "All matches are saved in ./sketchRecognise/matches/")
+        location = QFileDialog.getExistingDirectory(None, "Select a folder to save all the Matches", r"C:/")
+
+        if location:
+            dialog_box("success", "Processing !", "This may take a while. Please click OK and wait")
+            MainWindow.setWindowTitle("Processing --- Please wait ")
+            match = recognizer.video_sketch_recognizer(sketch, video, location)
+            if match == "no_match" or match == 0:
+                dialog_box("success", "No match !", "No match found for the uploaded sketch")
+            else:
+                dialog_box("success", f"{match} Matches found !", f"All matches are saved in {location}")
+            MainWindow.setWindowTitle("Sketch and Emotion Recognition")
 
     else:
+        dialog_box("success", "Processing !", "This may take a while. Please click OK and wait")
+        MainWindow.setWindowTitle("Processing --- Please wait ")
         if recognizer.image_sketch_recognizer(sketch) == "no_match":
             dialog_box("success", "No match !", "No match found for the uploaded sketch")
+        MainWindow.setWindowTitle("Sketch and Emotion Recognition")
 
 
 # Main Class
@@ -194,6 +204,8 @@ class UserInterface(object):
         btn_style_1 = f"QPushButton{{" \
                       f"color: rgb(255,255,255); " \
                       f"background-color: {secondary_bg}; " \
+                      f"border: none; " \
+                      f"outline: none; " \
                       f"border-radius: 5px; font-size: 15px;" \
                       f"}}" \
                       f" QPushButton:hover{{" \
@@ -399,7 +411,7 @@ if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     # Add Icon
     icon = QtGui.QIcon()
-    icon.addFile("static/icon.png")
+    icon.addFile("static/icon.jpg")
     app.setWindowIcon(icon)
     # Create Main Window
     MainWindow = QtWidgets.QMainWindow()
