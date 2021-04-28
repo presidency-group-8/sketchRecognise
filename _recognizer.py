@@ -166,7 +166,6 @@ def image_emotion_recognizer(image):
     cv.imshow("EMOTION RECOGNITION", image)
     cv.waitKey(0)
 
-
 def live_emotion_recognizer():
     cam = cv.VideoCapture(0)
     while True:
