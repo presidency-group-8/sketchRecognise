@@ -6,3 +6,7 @@ matches/
 /unknownImages
 /__pycache__
 /matches
+main.spec
+/scipy-extra
+/scipy
+scipy/
