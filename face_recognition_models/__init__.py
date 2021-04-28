@@ -1,4 +1,3 @@
-
 from pkg_resources import resource_filename
 
 def pose_predictor_model_location():
