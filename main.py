@@ -1,8 +1,10 @@
 import sys
 import os
+
 from PyQt5.QtCore import QPropertyAnimation
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QFileDialog, QMessageBox
+
 import _recognizer as recognizer
 
 # Globals
@@ -134,6 +136,8 @@ class UserInterface(object):
         self.home_body = QtWidgets.QLabel(self.home_page)
         self.upload = QtWidgets.QPushButton(self.home_page)
         self.quit = QtWidgets.QPushButton(self.home_page)
+        self.pixmap = QtGui.QPixmap("static/logo.png")
+        self.logo = QtWidgets.QLabel(self.home_page)
 
         self.sketch_page = QtWidgets.QWidget()
         self.sketch_head = QtWidgets.QLabel(self.sketch_page)
@@ -152,6 +156,7 @@ class UserInterface(object):
         self.about_page = QtWidgets.QWidget()
         self.about_head = QtWidgets.QLabel(self.about_page)
         self.about_body = QtWidgets.QLabel(self.about_page)
+        self.project_link = QtWidgets.QPushButton(self.about_page)
 
         self.animation = QPropertyAnimation(self.leftPanel, b"minimumWidth")
         self.vertical_layout = QtWidgets.QVBoxLayout(self.central_widget)
@@ -233,13 +238,13 @@ class UserInterface(object):
         self.home_page.setStyleSheet(f"background-color: {main_bg};")
         self.home_page.setObjectName("home_page")
         # Home Head
-        self.home_head.setGeometry(QtCore.QRect(150, 10, 571, 55))
-        self.home_head.setStyleSheet(f"border:none; font-size:40px; color: rgb(255,255,0); font-variant: small-caps")
+        self.home_head.setGeometry(QtCore.QRect(90, 10, 610, 55))
+        self.home_head.setStyleSheet(f"border:none; font-size:45px; color: rgb(255,255,0); font-variant: small-caps")
         self.home_head.setText("Sketch and Emotion Recognition")
         self.home_head.setObjectName("home_head")
         # Home Body
-        self.home_body.setGeometry(QtCore.QRect(150, 80, 750, 200))
-        self.home_body.setStyleSheet(f"border:none; font-size:18px; color: rgb(255,255,0);")
+        self.home_body.setGeometry(QtCore.QRect(90, 80, 750, 200))
+        self.home_body.setStyleSheet(f"border:none; font-size:20px; color: rgb(255,255,0);")
         self.home_body.setText("Welcome to Sketch and Emotion recognizer. "
                                "To recognize Sketch\nand Emotion choose from the Hamburger Menu."
                                "\n\nYou can upload an image into the database, upload a sketch to\nrecognize "
@@ -257,6 +262,10 @@ class UserInterface(object):
         self.quit.setText("EXIT THE APPLICATION")
         self.quit.clicked.connect(lambda: QtCore.QCoreApplication.instance().quit())
         self.quit.setObjectName("quit")
+        # Logo
+        self.logo.setGeometry(QtCore.QRect(130, 440, 550, 150))
+        self.logo.setObjectName("logo")
+        self.logo.setPixmap(self.pixmap)
 
         # Button for SKETCH PAGE
         self.sketch_button.setGeometry(QtCore.QRect(10, 140, 95, 60))
@@ -268,13 +277,13 @@ class UserInterface(object):
         self.sketch_page.setStyleSheet(f"background-color: {main_bg};")
         self.sketch_page.setObjectName("sketch_page")
         # Sketch Head
-        self.sketch_head.setGeometry(QtCore.QRect(150, 10, 571, 55))
-        self.sketch_head.setStyleSheet(f"border:none; font-size:40px; color: rgb(255,255,0); font-variant: small-caps")
+        self.sketch_head.setGeometry(QtCore.QRect(90, 10, 571, 55))
+        self.sketch_head.setStyleSheet(f"border:none; font-size:45px; color: rgb(255,255,0); font-variant: small-caps")
         self.sketch_head.setText("Sketch Recognition")
         self.sketch_head.setObjectName("sketch_head")
         # Sketch Body
-        self.sketch_body.setGeometry(QtCore.QRect(150, 80,   750, 200))
-        self.sketch_body.setStyleSheet(f"border:none; font-size:18px; color: rgb(255,255,0);")
+        self.sketch_body.setGeometry(QtCore.QRect(90, 80, 750, 200))
+        self.sketch_body.setStyleSheet(f"border:none; font-size:20px; color: rgb(255,255,0);")
         self.sketch_body.setText("Please upload the Sketch first using UPLOAD SKETCH."
                                  "\nTo recognize the person in the sketch use START RECOGNITION."
                                  "\nTo recognize the sketch live use LIVE RECOGNITION.")
@@ -314,13 +323,13 @@ class UserInterface(object):
         self.emotion_page.setStyleSheet(f"background-color: {main_bg});")
         self.emotion_page.setObjectName("emotion_page")
         # Emotion Head
-        self.emotion_head.setGeometry(QtCore.QRect(150, 10, 571, 55))
-        self.emotion_head.setStyleSheet(f"border:none; font-size:40px; color: rgb(255,255,0); font-variant: small-caps")
+        self.emotion_head.setGeometry(QtCore.QRect(90, 10, 571, 55))
+        self.emotion_head.setStyleSheet(f"border:none; font-size:45px; color: rgb(255,255,0); font-variant: small-caps")
         self.emotion_head.setText("Emotion Recognition")
         self.emotion_head.setObjectName("emotion_head")
         # Emotion Body
-        self.emotion_body.setGeometry(QtCore.QRect(150, 80, 750, 200))
-        self.emotion_body.setStyleSheet(f"border:none; font-size:18px; color: rgb(255,255,0);")
+        self.emotion_body.setGeometry(QtCore.QRect(90, 80, 750, 200))
+        self.emotion_body.setStyleSheet(f"border:none; font-size:20px; color: rgb(255,255,0);")
         self.emotion_body.setText("To recognize the emotion of a Human in an image, click on\nBrowse Image."
                                   "\n\nTo recognize emotions Live, click on LIVE Recognition.\n")
         self.emotion_body.setObjectName("emotion_body")
@@ -348,7 +357,7 @@ class UserInterface(object):
         self.about_page.setObjectName("about_page")
         # About Title
         self.about_head.setGeometry(QtCore.QRect(80, 0, 571, 55))
-        self.about_head.setStyleSheet(f"border:none; font-size:40px; color: rgb(255,255,0); font-variant: small-caps;")
+        self.about_head.setStyleSheet(f"border:none; font-size:45px; color: rgb(255,255,0); font-variant: small-caps;")
         self.about_head.setText("About Us")
         self.about_head.setObjectName("home_head")
         # About Body
@@ -360,10 +369,15 @@ class UserInterface(object):
                                 " and can also be used to recognize the emotion of a Human."
                                 "\n\nTo recognize sketch use the SKETCH RECOGNITION menu."
                                 "\nTo recognize emotion use the EMOTION RECOGNITION menu."
-                                "\n\nThis appliation is built using OpenCv, PyQT and DLib."
+                                "\n\nThis application is built using OpenCV, DLib, Keras, PyQt."
                                 "\n\nAuthors: Prakyath S Arya\n\tPrathyaksh NP\n\tPrajwal Gowda S\n\t"
                                 "Pasang Gurung\n\tPreetham CD")
         self.about_body.setObjectName("home_body")
+        # Link to Project
+        self.project_link.setGeometry(QtCore.QRect(80, 510, 300, 50))
+        self.project_link.setStyleSheet(btn_style_2)
+        self.project_link.setText("Goto to project resources")
+        self.project_link.setObjectName("project_link")
 
         # Add widgets into Vertical Layout
         self.vertical_layout.addWidget(self.header)
@@ -377,10 +391,9 @@ class UserInterface(object):
         main_window.setCentralWidget(self.central_widget)
 
         # Stack Pages
-        self.stacked_widget.setGeometry(QtCore.QRect(-1, 9, 681, 461))
+        self.stacked_widget.setGeometry(QtCore.QRect(-1, 9, 1500, 1500))
         self.stacked_widget.setCurrentWidget(self.home_page)
         self.stacked_widget.setObjectName("stacked_widget")
-        self.stacked_widget.setCurrentWidget(self.home_page)
         self.stacked_widget.addWidget(self.home_page)
         self.stacked_widget.addWidget(self.sketch_page)
         self.stacked_widget.addWidget(self.emotion_page)
