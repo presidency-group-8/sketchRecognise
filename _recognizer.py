@@ -165,7 +165,6 @@ def image_emotion_recognizer(image):
         cv.putText(image, result, (left + 5, top - 5), cv.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
     cv.imshow("EMOTION RECOGNITION", image)
     cv.waitKey(0)
-    cv.destroyAllWindows()
 
 
 def live_emotion_recognizer():
