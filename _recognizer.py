@@ -26,11 +26,14 @@ def encodings_of_image_database(known_images_db):
     known_encodings = []
     names = os.listdir(known_images_db)
     for file in names:
-        print(file)
+        print("Working.....")
+        print(file + "\n")
         img = read_img(known_images_db + file)
-        encode = face_recognition.face_encodings(img)[0]
-        print("Working...\n")
-        known_encodings.append(encode)
+        try:
+            encode = face_recognition.face_encodings(img)[0]
+            known_encodings.append(encode)
+        except Exception:
+            print(f"{known_images_db}{file} does not have a face.")
     return known_encodings
 
 
@@ -59,7 +62,7 @@ def image_matching(known_encoding, sketch_encode, known_images_db):
 
 
 def image_sketch_recognizer(sketch):
-    database = "C:/Users/aryap/Documents/Python Scripts/sketchRecognise/image_database/"
+    database = "image_database/"
     sketch_encode = encodings_of_sketch(sketch)
     if sketch_encode == "error":
         return "no_match"
@@ -67,7 +70,7 @@ def image_sketch_recognizer(sketch):
     return image_matching(known_encodings, sketch_encode, database)
 
 
-def video_sketch_recognizer(sketch, vid):
+def video_sketch_recognizer(sketch, vid, location):
     sketch = read_img(sketch)
     sketch_encode = face_recognition.face_encodings(sketch)
     if not sketch_encode:
@@ -96,9 +99,9 @@ def video_sketch_recognizer(sketch, vid):
                 cv.rectangle(image, (x1, y1), (x2, y2), (0, 255, 0), 3)
                 cv.putText(image, "Match", (x1+10, y1-10), cv.FONT_HERSHEY_COMPLEX, 1, (0, 255, 0), 2)
                 frame_count += 1
-                cv.imwrite(f"matches/vid{frame_count}.jpeg", image)
+                cv.imwrite(f"{location}/Match-{frame_count}.jpeg", image)
 
-        cv.imshow("Sketch Recognition - Press 'q' to exit", image)
+        cv.imshow("Performing Recognition - Press 'q' to stop", image)
 
         if cv.waitKey(10) == ord('q'):
             cv.destroyAllWindows()
@@ -128,7 +131,7 @@ def live_sketch_recognizer(sketch, cam_code):
                     cv.rectangle(image, (x1, y1), (x2, y2), (0, 255, 0), 3)
                     cv.putText(image, "Match", (x1+10, y1-10), cv.FONT_HERSHEY_COMPLEX, 1, (0, 255, 0), 2)
 
-        cv.imshow("LIVE SKETCH RECOGNITION - Press 'q' to exit", image)
+        cv.imshow("LIVE RECOGNITION - Press 'q' to exit", image)
         if cv.waitKey(10) == ord('q'):
             cv.destroyAllWindows()
             break
@@ -148,7 +151,6 @@ def emotion_recognizer(image, left, top, right, bottom):
 
 
 def image_emotion_recognizer(image):
-    print(image)
     if not image:
         return
     image = read_img(image)
@@ -161,7 +163,7 @@ def image_emotion_recognizer(image):
         result = emotion_recognizer(image, left, top, right, bottom)
         cv.rectangle(image, (left, top), (right, bottom), (0, 255, 0), 2)
         cv.putText(image, result, (left + 5, top - 5), cv.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-    cv.imshow("EMOTION RECOGNITION: 'q' to exit", image)
+    cv.imshow("EMOTION RECOGNITION", image)
     cv.waitKey(0)
     cv.destroyAllWindows()
 
