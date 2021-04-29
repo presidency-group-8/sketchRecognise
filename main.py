@@ -128,8 +128,7 @@ def emotion_recognition(flag):
 def exit_app():
     MainWindow.setWindowTitle("Exiting ---")
     time.sleep(2)
-    MainWindow.setWindowTitle("Sketch and Emotion Recognition")
-
+    QtCore.QCoreApplication.instance().quit()
 
 # Main Class
 class UserInterface(object):
@@ -379,7 +378,7 @@ class UserInterface(object):
         self.about_head.setText("About Us")
         self.about_head.setObjectName("home_head")
         # About Body
-        self.about_body.setGeometry(QtCore.QRect(80, 70, 600, 400))
+        self.about_body.setGeometry(QtCore.QRect(80, 70, 600, 450))
         self.about_body.setStyleSheet(f"border:none; font-size:20px; color: rgb(255,255,255);")
         self.about_body.setText("This application is a University Project developed by "
                                 "the Students\nof Presidency University."
@@ -389,7 +388,7 @@ class UserInterface(object):
                                 "\nTo recognize emotion use the EMOTION RECOGNITION menu."
                                 "\n\nThis application is built using OpenCV, DLib, Keras, PyQt."
                                 "\n\nAuthors: Prakyath S Arya\n\tPrathyaksh NP\n\tPrajwal Gowda S\n\t"
-                                "Pasang Gurung\n\tPreetham CD")
+                                "Pasang Gurung\n\tPreetham CD\nMail: presidency.group8@gmail.com")
         self.about_body.setObjectName("home_body")
         # Link to Project
         # self.project_link.setGeometry(QtCore.QRect(80, 510, 300, 50))
@@ -447,6 +446,7 @@ if __name__ == "__main__":
     app.setWindowIcon(icon)
     # Create Main Window
     MainWindow = QtWidgets.QMainWindow()
+    # MainWindow.setWindowFlags(QtCore.Qt.FramelessWindowHint)
     # Create UI
     ui = UserInterface(MainWindow)
     # Add UI into Main Window
