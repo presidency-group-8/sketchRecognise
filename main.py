@@ -1,5 +1,6 @@
 import sys
 import os
+import time
 
 from PyQt5.QtCore import QPropertyAnimation
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -57,8 +58,7 @@ def move_to_database():
     if source:
         database = "image_database/"
         source, database = source.replace("/", "\\"), database.replace("/", "\\")
-        sure = dialog_box("question", "Sure ?", "Do you want to upload your selection?")
-        if sure == 16384:
+        if dialog_box("question", "Sure ?", "Do you want to upload your selection?") == 16384:
             error = os.system(f'copy "{source}" "{database}"')
             if not error:
                 dialog_box("success", "Success !", "The image has been uploaded into the database successfully")
@@ -77,7 +77,7 @@ def upload_sketch():
         dialog_box("error", "Failure !", "There was some error while adding the sketch")
 
 
-# Sketch recognition
+# Sketch Recognition
 def sketch_recognition(flag):
     if not sketch:
         dialog_box("warn", "No Sketch found !", "Please upload a sketch first")
@@ -85,7 +85,7 @@ def sketch_recognition(flag):
 
     print(sketch)
     if flag == "live":
-        if dialog_box("question", "Permission to access camera !", "Do you permit to use your camera?") == 16384:
+        if dialog_box("question", "Requesting camera access !", "Do you allow the app to open camera?") == 16384:
             recognizer.live_sketch_recognizer(sketch, 0)
         return
 
@@ -106,11 +106,29 @@ def sketch_recognition(flag):
             MainWindow.setWindowTitle("Sketch and Emotion Recognition")
 
     else:
-        dialog_box("success", "Processing !", "This may take a while. Please click OK and wait")
+        dialog_box("success", "Procfessing !", "This may take a while. Please click OK and wait")
         MainWindow.setWindowTitle("Processing --- Please wait ")
         if recognizer.image_sketch_recognizer(sketch) == "no_match":
             dialog_box("success", "No match !", "No match found for the uploaded sketch")
         MainWindow.setWindowTitle("Sketch and Emotion Recognition")
+
+
+# Emotion Recognition
+def emotion_recognition(flag):
+    if flag == "image":
+        dialog_box("success", "Processing !", "This may take a while. Please click OK and wait")
+        recognizer.image_emotion_recognizer(get_img())
+    else:
+        if dialog_box("question", "Requesting camera access !", "Do you allow the app to open camera?") == 16384:
+            recognizer.live_emotion_recognizer()
+        return
+
+
+# Exit Application
+def exit_app():
+    MainWindow.setWindowTitle("Exiting ---")
+    time.sleep(2)
+    MainWindow.setWindowTitle("Sketch and Emotion Recognition")
 
 
 # Main Class
@@ -120,8 +138,10 @@ class UserInterface(object):
         self.header = QtWidgets.QFrame(self.central_widget)
         self.body = QtWidgets.QFrame(self.central_widget)
 
-        self.hamburger_btn = QtWidgets.QPushButton(self.header)
+        self.ham_btn = QtWidgets.QPushButton(self.header)
         self.leftPanel = QtWidgets.QFrame(self.body)
+        self.panel_animation = QPropertyAnimation(self.leftPanel, b"minimumWidth")
+        self.ham_animation = QPropertyAnimation(self.leftPanel, b"styleSheet")
         self.content = QtWidgets.QFrame(self.body)
 
         self.home_button = QtWidgets.QPushButton(self.leftPanel)
@@ -135,7 +155,7 @@ class UserInterface(object):
         self.home_head = QtWidgets.QLabel(self.home_page)
         self.home_body = QtWidgets.QLabel(self.home_page)
         self.upload = QtWidgets.QPushButton(self.home_page)
-        self.quit = QtWidgets.QPushButton(self.home_page)
+        self.exit_button = QtWidgets.QPushButton(self.home_page)
         self.pixmap = QtGui.QPixmap("static/logo.png")
         self.logo = QtWidgets.QLabel(self.home_page)
 
@@ -156,9 +176,7 @@ class UserInterface(object):
         self.about_page = QtWidgets.QWidget()
         self.about_head = QtWidgets.QLabel(self.about_page)
         self.about_body = QtWidgets.QLabel(self.about_page)
-        self.project_link = QtWidgets.QPushButton(self.about_page)
 
-        self.animation = QPropertyAnimation(self.leftPanel, b"minimumWidth")
         self.vertical_layout = QtWidgets.QVBoxLayout(self.central_widget)
         self.horizontal_layout = QtWidgets.QHBoxLayout(self.body)
 
@@ -174,16 +192,16 @@ class UserInterface(object):
         self.vertical_layout.setObjectName("vertical_layout")
 
         # Header
-        self.header.setMaximumSize(QtCore.QSize(16777215, 60))  # width, height
+        self.header.setMaximumSize(QtCore.QSize(16777215, 65))  # width, height
         self.header.setStyleSheet(f"background-color: {main_bg};")
         self.header.setFrameShape(QtWidgets.QFrame.NoFrame)
         self.header.setFrameShadow(QtWidgets.QFrame.Raised)
         self.header.setObjectName("header")
         # Hamburger Button
-        self.hamburger_btn.setGeometry(QtCore.QRect(15, 15, 50, 250))
-        self.hamburger_btn.setStyleSheet("background:url('static/ham.png') no-repeat; border: none;")
-        self.hamburger_btn.clicked.connect(lambda: self.slide_left_panel())
-        self.hamburger_btn.setObjectName("hamburger_btn")
+        self.ham_btn.setGeometry(QtCore.QRect(15, 15, 50, 250))
+        self.ham_btn.setStyleSheet("background:url('static/ham1.png') no-repeat; border: none;")
+        self.ham_btn.clicked.connect(lambda: self.slide_left_panel())
+        self.ham_btn.setObjectName("ham_btn")
 
         # Body
         self.body.setFrameShape(QtWidgets.QFrame.NoFrame)
@@ -257,11 +275,11 @@ class UserInterface(object):
         self.upload.clicked.connect(lambda: move_to_database())
         self.upload.setObjectName("upload")
         # Exit Button
-        self.quit.setGeometry(QtCore.QRect(150, 350, 500, 50))
-        self.quit.setStyleSheet(btn_style_2)
-        self.quit.setText("EXIT THE APPLICATION")
-        self.quit.clicked.connect(lambda: QtCore.QCoreApplication.instance().quit())
-        self.quit.setObjectName("quit")
+        self.exit_button.setGeometry(QtCore.QRect(150, 350, 500, 50))
+        self.exit_button.setStyleSheet(btn_style_2)
+        self.exit_button.setText("EXIT THE APPLICATION")
+        self.exit_button.clicked.connect(lambda: exit_app())
+        self.exit_button.setObjectName("exit_button")
         # Logo
         self.logo.setGeometry(QtCore.QRect(130, 440, 550, 150))
         self.logo.setObjectName("logo")
@@ -298,7 +316,7 @@ class UserInterface(object):
         self.sketch_start_btn.setGeometry(QtCore.QRect(150, 340, 245, 50))
         self.sketch_start_btn.setStyleSheet(btn_style_2)
         self.sketch_start_btn.setText("START RECOGNITION")
-        self.sketch_start_btn.clicked.connect(lambda: sketch_recognition(""))
+        self.sketch_start_btn.clicked.connect(lambda: sketch_recognition("image"))
         self.sketch_start_btn.setObjectName("sketch_start_btn")
         # Sketch Video Button
         self.sketch_vid_btn.setGeometry(QtCore.QRect(400, 340, 245, 50))
@@ -337,13 +355,13 @@ class UserInterface(object):
         self.emotion_browse_btn.setGeometry(QtCore.QRect(150, 280, 500, 50))
         self.emotion_browse_btn.setStyleSheet(btn_style_2)
         self.emotion_browse_btn.setText("BROWSE IMAGE TO RECOGNIZE EMOTION")
-        self.emotion_browse_btn.clicked.connect(lambda: recognizer.image_emotion_recognizer(get_img()))
+        self.emotion_browse_btn.clicked.connect(lambda: emotion_recognition("image"))
         self.emotion_browse_btn.setObjectName("emotion_browse_btn")
         # Emotion Live Button
         self.emotion_live_btn.setGeometry(QtCore.QRect(150, 350, 500, 50))
         self.emotion_live_btn.setStyleSheet(btn_style_2)
         self.emotion_live_btn.setText("LIVE RECOGNITION")
-        self.emotion_live_btn.clicked.connect(lambda: recognizer.live_emotion_recognizer())
+        self.emotion_live_btn.clicked.connect(lambda: emotion_recognition("live"))
         self.emotion_live_btn.setObjectName("emotion_live_btn")
 
         # Button for ABOUT PAGE
@@ -374,10 +392,11 @@ class UserInterface(object):
                                 "Pasang Gurung\n\tPreetham CD")
         self.about_body.setObjectName("home_body")
         # Link to Project
-        self.project_link.setGeometry(QtCore.QRect(80, 510, 300, 50))
-        self.project_link.setStyleSheet(btn_style_2)
-        self.project_link.setText("Goto to project resources")
-        self.project_link.setObjectName("project_link")
+        # self.project_link.setGeometry(QtCore.QRect(80, 510, 300, 50))
+        # self.project_link.setStyleSheet(btn_style_2)
+        # self.project_link.setText("Goto to project resources")
+        # self.project_link.clicked.connect(lambda: goto_resources())
+        # self.project_link.setObjectName("project_link")
 
         # Add widgets into Vertical Layout
         self.vertical_layout.addWidget(self.header)
@@ -412,11 +431,11 @@ class UserInterface(object):
         else:
             new_width = 0
 
-        self.animation.setDuration(600)
-        self.animation.setStartValue(width)
-        self.animation.setEndValue(new_width)
-        self.animation.setEasingCurve(QtCore.QEasingCurve.InOutQuart)
-        self.animation.start()
+        self.panel_animation.setDuration(600)
+        self.panel_animation.setStartValue(width)
+        self.panel_animation.setEndValue(new_width)
+        self.panel_animation.setEasingCurve(QtCore.QEasingCurve.InOutQuart)
+        self.panel_animation.start()
 
 
 if __name__ == "__main__":
