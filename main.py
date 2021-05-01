@@ -1,6 +1,7 @@
 import sys
 import os
 import time
+import webbrowser
 
 from PyQt5.QtCore import QPropertyAnimation
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -106,7 +107,7 @@ def sketch_recognition(flag):
             MainWindow.setWindowTitle("Sketch and Emotion Recognition")
 
     else:
-        dialog_box("success", "Procfessing !", "This may take a while. Please click OK and wait")
+        dialog_box("success", "Processing !", "This may take a while. Please click OK and wait")
         MainWindow.setWindowTitle("Processing --- Please wait ")
         if recognizer.image_sketch_recognizer(sketch) == "no_match":
             dialog_box("success", "No match !", "No match found for the uploaded sketch")
@@ -116,8 +117,10 @@ def sketch_recognition(flag):
 # Emotion Recognition
 def emotion_recognition(flag):
     if flag == "image":
-        dialog_box("success", "Processing !", "This may take a while. Please click OK and wait")
+        dialog_box("success", "Processing !", "This may take a while. Please choose an image and wait")
+        MainWindow.setWindowTitle("Processing --- Please wait ")
         recognizer.image_emotion_recognizer(get_img())
+        MainWindow.setWindowTitle("Sketch and Emotion Recognition")
     else:
         if dialog_box("question", "Requesting camera access !", "Do you allow the app to open camera?") == 16384:
             recognizer.live_emotion_recognizer()
@@ -130,8 +133,22 @@ def exit_app():
     time.sleep(2)
     QtCore.QCoreApplication.instance().quit()
 
+
+# Goto project source
+def goto_resources():
+    dialog_box("success", "Please wait", "You will be redirected to the project resources shortly")
+    try:
+        webbrowser.open("https://github.com/presidency-group-8/sketchRecognise")
+    except Exception:
+        time.sleep(3)
+        dialog_box("error", "Something went wrong !", "Sorry we couldn't access your browser. You can visit "
+                                                      "https://github.com/presidency-group-8/sketchRecognise "
+                                                      "to access resources.")
+
+
 # Main Class
 class UserInterface(object):
+    # Constructor
     def __init__(self, main_window):
         self.central_widget = QtWidgets.QWidget(main_window)
         self.header = QtWidgets.QFrame(self.central_widget)
@@ -175,10 +192,12 @@ class UserInterface(object):
         self.about_page = QtWidgets.QWidget()
         self.about_head = QtWidgets.QLabel(self.about_page)
         self.about_body = QtWidgets.QLabel(self.about_page)
+        self.project_link = QtWidgets.QPushButton(self.about_page)
 
         self.vertical_layout = QtWidgets.QVBoxLayout(self.central_widget)
         self.horizontal_layout = QtWidgets.QHBoxLayout(self.body)
 
+    # UI Body
     def ui_body(self, main_window):
         # Main window
         main_window.setFixedSize(800, 700)
@@ -372,14 +391,14 @@ class UserInterface(object):
         # About Page
         self.about_page.setStyleSheet(f"background-color: {main_bg};")
         self.about_page.setObjectName("about_page")
-        # About Title
-        self.about_head.setGeometry(QtCore.QRect(80, 0, 571, 55))
+        # About Head
+        self.about_head.setGeometry(QtCore.QRect(90, 0, 571, 55))
         self.about_head.setStyleSheet(f"border:none; font-size:45px; color: rgb(255,255,0); font-variant: small-caps;")
         self.about_head.setText("About Us")
         self.about_head.setObjectName("home_head")
         # About Body
-        self.about_body.setGeometry(QtCore.QRect(80, 70, 600, 450))
-        self.about_body.setStyleSheet(f"border:none; font-size:20px; color: rgb(255,255,255);")
+        self.about_body.setGeometry(QtCore.QRect(90, 50, 600, 450))
+        self.about_body.setStyleSheet(f"border:none; font-size:18px; color: rgb(255,255,0);")
         self.about_body.setText("This application is a University Project developed by "
                                 "the Students\nof Presidency University."
                                 "\n\nThis application can be used to recognize the Human in a given\nsketch"
@@ -391,11 +410,11 @@ class UserInterface(object):
                                 "Pasang Gurung\n\tPreetham CD\nMail: presidency.group8@gmail.com")
         self.about_body.setObjectName("home_body")
         # Link to Project
-        # self.project_link.setGeometry(QtCore.QRect(80, 510, 300, 50))
-        # self.project_link.setStyleSheet(btn_style_2)
-        # self.project_link.setText("Goto to project resources")
-        # self.project_link.clicked.connect(lambda: goto_resources())
-        # self.project_link.setObjectName("project_link")
+        self.project_link.setGeometry(QtCore.QRect(90, 490, 300, 50))
+        self.project_link.setStyleSheet(btn_style_2)
+        self.project_link.setText("Goto to project resources")
+        self.project_link.clicked.connect(lambda: goto_resources())
+        self.project_link.setObjectName("project_link")
 
         # Add widgets into Vertical Layout
         self.vertical_layout.addWidget(self.header)
@@ -424,33 +443,39 @@ class UserInterface(object):
     # Left Panel Animation
     def slide_left_panel(self):
         width = self.leftPanel.width()
-
         if width == 0:
             new_width = 110
+            style = "background:url('static/ham2.png') no-repeat; border: none;"
         else:
             new_width = 0
-
+            style = "background:url('static/ham1.png') no-repeat; border: none;"
         self.panel_animation.setDuration(600)
         self.panel_animation.setStartValue(width)
         self.panel_animation.setEndValue(new_width)
         self.panel_animation.setEasingCurve(QtCore.QEasingCurve.InOutQuart)
         self.panel_animation.start()
+        self.ham_btn.setStyleSheet(style)
 
 
 if __name__ == "__main__":
     # Create App
     app = QtWidgets.QApplication(sys.argv)
+
     # Add Icon
     icon = QtGui.QIcon()
-    icon.addFile("static/icon.jpg")
+    icon.addFile("static/icon.png")
     app.setWindowIcon(icon)
+
     # Create Main Window
     MainWindow = QtWidgets.QMainWindow()
     # MainWindow.setWindowFlags(QtCore.Qt.FramelessWindowHint)
+
     # Create UI
     ui = UserInterface(MainWindow)
+
     # Add UI into Main Window
     ui.ui_body(MainWindow)
+
     # Display the App
     MainWindow.show()
     sys.exit(app.exec_())
