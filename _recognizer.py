@@ -80,7 +80,8 @@ def video_sketch_recognizer(sketch, vid, location):
     frame_count = 0
     cam = cv.VideoCapture(vid)
     while True:
-        success, image = cam.read()
+        for i in range(5):
+            success, image = cam.read()
         if not success:
             return frame_count
         img = cv.cvtColor(image, cv.COLOR_BGR2RGB)
@@ -165,6 +166,7 @@ def image_emotion_recognizer(image):
         cv.putText(image, result, (left + 5, top - 5), cv.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
     cv.imshow("EMOTION RECOGNITION", image)
     cv.waitKey(0)
+
 
 def live_emotion_recognizer():
     cam = cv.VideoCapture(0)
