@@ -80,9 +80,9 @@ def video_sketch_recognizer(sketch, vid, location):
     frame_count = 0
     cam = cv.VideoCapture(vid)
     while True:
-        for i in range(5):
-            success, image = cam.read()
+        success, image = cam.read()
         if not success:
+            cv.destroyAllWindows()
             return frame_count
         img = cv.cvtColor(image, cv.COLOR_BGR2RGB)
 
