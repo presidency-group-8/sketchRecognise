@@ -3,7 +3,10 @@ temp.txt
 
 /unknownImages
 /__pycache__
-/_CASIA_faces
 /scipy-extra
 /scipy
 
+/_CASIA_faces
+/CASIA_FACE_DATASET
+/NON_FACE_DATASET
+/CUHK_SKETCH_DATASET
