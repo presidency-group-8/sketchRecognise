@@ -1,14 +1,9 @@
-imageCollection/
-unknownImages/
-__pycache__/
-matches/
-/imageCollection
+main.spec
+temp.txt
+
 /unknownImages
 /__pycache__
-/matches
-main.spec
+/CASIA_faces
 /scipy-extra
 /scipy
-scipy/
-temp.txt
 
