@@ -3,6 +3,7 @@ temp.txt
 
 /unknownImages
 /__pycache__
+__pycache__/
 /scipy-extra
 /scipy
 
