@@ -145,6 +145,17 @@ def goto_resources():
                                                       "https://github.com/presidency-group-8/sketchRecognise "
                                                       "to access resources.")
 
+def goto_page(self, page):
+    self.slide_left_panel()
+    if page == "home":
+        self.stacked_widget.setCurrentWidget(self.home_page)
+    if page == "sketch":
+        self.stacked_widget.setCurrentWidget(self.sketch_page)
+    if page == "emotion":
+        self.stacked_widget.setCurrentWidget(self.emotion_page)
+    if page == "about":
+        self.stacked_widget.setCurrentWidget(self.about_page)
+     
 
 # Main Class
 class UserInterface(object):
@@ -268,7 +279,7 @@ class UserInterface(object):
         self.home_button.setGeometry(QtCore.QRect(10, 70, 95, 60))
         self.home_button.setStyleSheet(btn_style_1)
         self.home_button.setText("Home")
-        self.home_button.clicked.connect(lambda: self.stacked_widget.setCurrentWidget(self.home_page))
+        self.home_button.clicked.connect(lambda: goto_page(self, "home"))
         self.home_button.setObjectName("home_button")
         # Home Page
         self.home_page.setStyleSheet(f"background-color: {main_bg};")
@@ -307,7 +318,7 @@ class UserInterface(object):
         self.sketch_button.setGeometry(QtCore.QRect(10, 140, 95, 60))
         self.sketch_button.setStyleSheet(btn_style_1)
         self.sketch_button.setText("Sketch\nRecognition")
-        self.sketch_button.clicked.connect(lambda: self.stacked_widget.setCurrentWidget(self.sketch_page))
+        self.sketch_button.clicked.connect(lambda: goto_page(self, "sketch"))
         self.sketch_button.setObjectName("sketch_button")
         # Sketch Page
         self.sketch_page.setStyleSheet(f"background-color: {main_bg};")
@@ -353,7 +364,7 @@ class UserInterface(object):
         self.emotion_button.setGeometry(QtCore.QRect(10, 210, 95, 60))
         self.emotion_button.setStyleSheet(btn_style_1)
         self.emotion_button.setText("Emotion\nRecognition")
-        self.emotion_button.clicked.connect(lambda: self.stacked_widget.setCurrentWidget(self.emotion_page))
+        self.emotion_button.clicked.connect(lambda: goto_page(self, "emotion"))
         self.emotion_button.setObjectName("emotion_button")
         # Emotion Page
         self.emotion_page.setStyleSheet(f"background-color: {main_bg});")
@@ -386,7 +397,7 @@ class UserInterface(object):
         self.about_button.setGeometry(QtCore.QRect(10, 450, 95, 50))
         self.about_button.setStyleSheet(btn_style_1)
         self.about_button.setText("About")
-        self.about_button.clicked.connect(lambda: self.stacked_widget.setCurrentWidget(self.about_page))
+        self.about_button.clicked.connect(lambda: goto_page(self, "about"))
         self.about_button.setObjectName("about_button")
         # About Page
         self.about_page.setStyleSheet(f"background-color: {main_bg};")
