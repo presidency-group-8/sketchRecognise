@@ -1,11 +1,27 @@
-import os
 import time
 import cv2 as cv
 import dlib
+import os
+import imagehash
+from PIL import Image
+import face_recognition as fr
+# from keras.models import load_model
+# from keras.preprocessing.image import img_to_array
 import numpy as np
 
+
+def read_img(img_path):
+    img = cv.imread(img_path)
+    (h, w) = img.shape[:2]
+    width = 500
+    ratio = width / float(w)
+    height = int(h * ratio)
+    img = cv.resize(img, (width, height))
+    return img
+
+
 def preprocessing():
-    # dataset_path = r".\CASIA_FACE_DATASET"
+    dataset_path = ""  # r".\CASIA_FACE_DATASET"
     dirs = os.listdir(dataset_path)
     print(len(dirs))
     print("\n\n----------------\n\n")
@@ -56,6 +72,11 @@ def load_models(model):
         print("Cascade loaded successfully")
         return cascade_face_model
 
+    if model == "expression":
+        pass
+        # expression_model = load_model("Emotion_Detection.h5")
+        # return expression_model
+
 
 def hog_test(dataset_path):
     # Load HOG model
@@ -68,6 +89,7 @@ def hog_test(dataset_path):
     total_images = len(images)
     print("STARTING TEST\n")
     count = 0
+    # error = []
     start = time.time()
     for image in images:
         count += 1
@@ -80,14 +102,20 @@ def hog_test(dataset_path):
             hog_detected += 1
         else:
             hog_not_detected += 1
+            # error.append(image)
     end = time.time()
+
     print("\n\n-----------------------------------\n")
-    print("          READINGS OF TEST             ")
+    print("READINGS OF TEST".center(35))
     print("\n-----------------------------------\n\n")
-    print(f"TEST CASES           --->   {total_images} IMAGES")
-    print(f"TIME TAKEN           --->   {end-start} SECONDS")
-    print(f"HOG DETECTED         --->   {hog_detected}")
-    print(f"HOG NOT DETECTED     --->   {hog_not_detected}")
+    print("TEST CASES".ljust(21), f"--->   {total_images} IMAGES")
+    print("TIME TAKEN".ljust(21), f"--->   {end - start} SECONDS")
+    print("HOG DETECTED".ljust(21), f"--->   {hog_detected}")
+    print("HOG NOT DETECTED".ljust(21), f"--->   {hog_not_detected}")
+    # print(f"LIST OF SKETCHES NOT DETECTED BY HOG")
+    # count = 0
+    # for face in error:
+    #     print(face)
 
 
 def cascade_test(dataset_path):
@@ -102,6 +130,7 @@ def cascade_test(dataset_path):
     print("STARTING TEST\n")
     count = 0
     start = time.time()
+    # error = []
     for image in images:
         count += 1
         print(f"WORKING ON IMAGE - {count}")
@@ -111,21 +140,17 @@ def cascade_test(dataset_path):
         cascade_faces = cascade_face_model.detectMultiScale(img, 1.1, 4)
         if len(cascade_faces):
             cascade_detected += 1
-            for (x,y,h,w) in cascade_faces:
-                cv.rectangle(img, (x, y), (x + w, y + h), (0, 0, 255), 2)
-                cv.imshow(image, img)
-                cv.waitKey(0)
-
         else:
             cascade_not_detected += 1
+            # error.append(image)
     end = time.time()
     print("\n\n-----------------------------------\n")
-    print("          READINGS OF TEST             ")
+    print("READINGS OF TEST".center(35))
     print("\n-----------------------------------\n\n")
-    print(f"TEST CASES           --->   {total_images} IMAGES")
-    print(f"TIME TAKEN           --->   {end-start} SECONDS")
-    print(f"CASCADE DETECTED     --->   {cascade_detected}")
-    print(f"CASCADE NOT DETECTED --->   {cascade_not_detected}")
+    print("TEST CASES".ljust(21), f"--->   {total_images} IMAGES")
+    print("TIME TAKEN".ljust(21), f"--->   {end-start} SECONDS")
+    print("CASCADE DETECTED".ljust(21), f"--->   {cascade_detected}")
+    print("CASCADE NOT DETECTED".ljust(21), f"--->   {cascade_not_detected}")
     # print(f"LIST OF SKETCHES NOT DETECTED BY CASCADE")
     # for face in error:
     #     print(face)
@@ -163,8 +188,84 @@ def unit_test(img_name):
     cv.waitKey(0)
 
 
-def hash_face_compare(image1, image2):
+def hash_face_compare_test(sketch_path, image_db):
+    sketches = os.listdir(sketch_path)
+    sketch_hash = {}
+    for sketch in sketches:
+        hash_value = imagehash.average_hash(Image.open(f"{sketch_path}\\{sketch}"))
+        sketch_hash[sketch] = hash_value
 
+    images = os.listdir(image_db)
+    image_hash = {}
+    for image in images:
+        hash_value = imagehash.average_hash(Image.open(f"{image_db}\\{image}"))
+        image_hash[image] = hash_value
+
+    cutoff = 30
+    result = {}
+    for sketch in sketches:
+        matches = []
+        for image in images:
+            hash1 = sketch_hash[sketch]
+            hash2 = image_hash[image]
+            if hash1 - hash2 < cutoff:
+                matches.append(image)
+        result[sketch] = matches
+
+    for key, value in result.items():
+        print(f"{key} ---> {value}\n\n")
+
+
+def encodings_face_compare_test(sketch_path, image_db):
+    start = time.time()
+    sketches = os.listdir(sketch_path)
+    sketch_encoding = {}
+    for sketch in sketches:
+        img = read_img(f"{sketch_path}\\{sketch}")
+        encodings = fr.face_encodings(img)[0]
+        sketch_encoding[sketch] = encodings
+    print("SKETCH ENCODINGS DONE")
+    end = time.time()
+    sketch_time = end - start
+
+    start = time.time()
+    images = os.listdir(image_db)
+    image_encodings = []
+    for image in images:
+        img = read_img(f"{image_db}\\{image}")
+        encodings = fr.face_encodings(img)[0]
+        image_encodings.append(encodings)
+    print("IMAGE DB ENCODINGS DONE")
+    end = time.time()
+    image_time = end - start
+
+    start = time.time()
+    result = {}
+    for sketch in sketches:
+        matches = []
+        match_result = fr.compare_faces(image_encodings, sketch_encoding[sketch])
+        for i, res in enumerate(match_result):
+            if res:
+                matches.append(images[i])
+        result[sketch] = matches
+        print(f"DONE {sketch}")
+    end = time.time()
+    compare_time = end - start
+
+    for key, value in result.items():
+        print(f"{key} ---> {value}\n\n")
+
+    print("TOTAL SKETCHES".ljust(31), f"---> {len(sketches)}")
+    print("TOTAL IMAGES".ljust(31), f"---> {len(images)}")
+    print("TOTAL CASES".ljust(31), f"---> {len(sketches) * len(images)}")
+    print("TIME TAKEN FOR SKETCH ENCODE".ljust(31), f"-> {sketch_time} Seconds")
+    print("TIME TAKEN FOR IMAGE DB ENCODE".ljust(31), f" {image_time} Seconds")
+    print("TIME TAKEN FOR COMPARING".ljust(31), f"---> {compare_time} Seconds")
+    print("TOTAL IME TAKEN".ljust(31), f"---> {sketch_time + image_time + compare_time} Seconds")
+
+
+def expression_classifier_test(dataset_path):
+    print(dataset_path)
 
 
 if __name__ == "__main__":
@@ -172,7 +273,9 @@ if __name__ == "__main__":
     # Path specifies the location of image dataset
     # path = r".\CASIA_FACE_DATASET"
     # path = r".\CUHK_SKETCH_DATASET"
-    path = r".\C_NATURAL_IMAGES_DATASET"
+    # path = r".\C_NATURAL_IMAGES_DATASET"
+    sketchPath = r".\sketch_samples"
+    imageDb = r".\image_database"
 
     # CASiA has over 493021 face images of 10570 individuals.
     # Hence, we extract 2 images of every individual i.e. 10570*2 -> 21140 images
@@ -193,9 +296,15 @@ if __name__ == "__main__":
     # cascade_test(path)
 
     # To check performance of HOG model
-    # hog_test(path)
+    # hog_test(sketchPath)
 
     # To check the performance of both models on a single image
     # path_of_image = "./C_NATURAL_IMAGES_DATASET/flower_0752.jpg"
     # unit_test(path_of_image)
     # print("\n-------- EXIT -----------\n")
+
+    # To check sketch recognition performance of Hash algorithm
+    # hash_face_compare_test(sketchPath, imageDb)
+
+    # To check sketch recognition performance of Encodings algorithm
+    # encodings_face_compare_test(sketchPath, imageDb)
