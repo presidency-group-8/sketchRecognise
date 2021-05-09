@@ -5,8 +5,6 @@ import os
 import imagehash
 from PIL import Image
 import face_recognition as fr
-# from keras.models import load_model
-# from keras.preprocessing.image import img_to_array
 import numpy as np
 
 
@@ -161,7 +159,7 @@ def unit_test(img_name):
     cascade_face_model = load_models("cascade")
     hog_face_model = load_models("hog")
     # Read images twice
-    img1 = cv.imread(f"{img_name}")
+    img1 = read_img(f"{img_name}")
     img2 = np.copy(img1)
     # Test Cascade Model
     faces = cascade_face_model.detectMultiScale(img1, 1.1, 4)
@@ -184,7 +182,7 @@ def unit_test(img_name):
     cv.putText(img1, "CASCADE", (10, 25), cv.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
     cv.putText(img2, "HOG", (10, 25), cv.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
     img = np.hstack((img1, img2))
-    cv.imshow("TEST", img)
+    cv.imshow("Test", img)
     cv.waitKey(0)
 
 
@@ -218,12 +216,16 @@ def hash_face_compare_test(sketch_path, image_db):
 
 def encodings_face_compare_test(sketch_path, image_db):
     start = time.time()
+    error = []
     sketches = os.listdir(sketch_path)
     sketch_encoding = {}
     for sketch in sketches:
         img = read_img(f"{sketch_path}\\{sketch}")
-        encodings = fr.face_encodings(img)[0]
-        sketch_encoding[sketch] = encodings
+        try:
+            encodings = fr.face_encodings(img)[0]
+            sketch_encoding[sketch] = encodings
+        except Exception:
+            error.append(sketch)
     print("SKETCH ENCODINGS DONE")
     end = time.time()
     sketch_time = end - start
@@ -233,8 +235,11 @@ def encodings_face_compare_test(sketch_path, image_db):
     image_encodings = []
     for image in images:
         img = read_img(f"{image_db}\\{image}")
-        encodings = fr.face_encodings(img)[0]
-        image_encodings.append(encodings)
+        try:
+            encodings = fr.face_encodings(img)[0]
+            image_encodings.append(encodings)
+        except Exception:
+            error.append(image)
     print("IMAGE DB ENCODINGS DONE")
     end = time.time()
     image_time = end - start
@@ -252,19 +257,24 @@ def encodings_face_compare_test(sketch_path, image_db):
     end = time.time()
     compare_time = end - start
 
+    count = 0
     for key, value in result.items():
-        print(f"{key} ---> {value}\n\n")
+        count += 1
+        print(f"{count}) {key} ---> {value}")
 
     print("TOTAL SKETCHES".ljust(31), f"---> {len(sketches)}")
     print("TOTAL IMAGES".ljust(31), f"---> {len(images)}")
     print("TOTAL CASES".ljust(31), f"---> {len(sketches) * len(images)}")
-    print("TIME TAKEN FOR SKETCH ENCODE".ljust(31), f"-> {sketch_time} Seconds")
+    print("TIME TAKEN FOR SKETCH ENCODE".ljust(31), f"---> {sketch_time} Seconds")
     print("TIME TAKEN FOR IMAGE DB ENCODE".ljust(31), f" {image_time} Seconds")
     print("TIME TAKEN FOR COMPARING".ljust(31), f"---> {compare_time} Seconds")
     print("TOTAL IME TAKEN".ljust(31), f"---> {sketch_time + image_time + compare_time} Seconds")
+    print(f"Error occured in the following images\n {error}")
 
 
 def expression_classifier_test(dataset_path):
+    from keras.models import load_model
+    from keras.preprocessing.image import img_to_array
     print(dataset_path)
 
 
@@ -272,12 +282,12 @@ if __name__ == "__main__":
     print("\n---------------")
     # Path specifies the location of image dataset
     # path = r".\CASIA_FACE_DATASET"
+    # path = r".\NON_FACE_DATASET"
     # path = r".\CUHK_SKETCH_DATASET"
-    # path = r".\C_NATURAL_IMAGES_DATASET"
     sketchPath = r".\sketch_samples"
     imageDb = r".\image_database"
 
-    # CASiA has over 493021 face images of 10570 individuals.
+    # CASIA has over 493021 face images of 10570 individuals.
     # Hence, we extract 2 images of every individual i.e. 10570*2 -> 21140 images
     # preprocessing()
 
@@ -296,15 +306,17 @@ if __name__ == "__main__":
     # cascade_test(path)
 
     # To check performance of HOG model
-    # hog_test(sketchPath)
+    # hog_test(path)
 
     # To check the performance of both models on a single image
     # path_of_image = "./C_NATURAL_IMAGES_DATASET/flower_0752.jpg"
+
     # unit_test(path_of_image)
-    # print("\n-------- EXIT -----------\n")
 
     # To check sketch recognition performance of Hash algorithm
     # hash_face_compare_test(sketchPath, imageDb)
 
     # To check sketch recognition performance of Encodings algorithm
-    # encodings_face_compare_test(sketchPath, imageDb)
+    encodings_face_compare_test(sketchPath, imageDb)
+
+    # print("\n-------- EXIT -----------\n")
