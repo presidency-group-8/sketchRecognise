@@ -10,3 +10,4 @@ __pycache__/
 /CASIA_FACE_DATASET
 /NON_FACE_DATASET
 /CUHK_SKETCH_DATASET
+/emotion_dataset
