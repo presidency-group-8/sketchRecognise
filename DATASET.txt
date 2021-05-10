@@ -5,6 +5,6 @@ https://drive.google.com/drive/folders/1jAwrYQrzJ5I8Fgz3krF4WAciXetDMNo0?usp=sha
 
 The datasets used for model evaluation are:
 1.  CASIA face image dataset    --->   21,140 Faces
-2.  CUHK face image sketches    --->   1712 Sketches
+2.  CUHK face sketches dataset  --->   1712 Sketches
 3.  Non face image dataset      --->   5913 Images
-4.  Emotions dataset            --->
+4.  Emotions dataset            --->   8100 Face Images and a CSV file containing its emotions	
