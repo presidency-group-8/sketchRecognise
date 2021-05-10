@@ -6,6 +6,7 @@ import imagehash
 from PIL import Image
 import face_recognition as fr
 import numpy as np
+import pandas as pd
 
 
 def read_img(img_path):
@@ -272,10 +273,61 @@ def encodings_face_compare_test(sketch_path, image_db):
     print(f"Error occured in the following images\n {error}")
 
 
-def expression_classifier_test(dataset_path):
+def emotion_classifier_test(emotions_image_set, emotions_data_set):
     from keras.models import load_model
     from keras.preprocessing.image import img_to_array
-    print(dataset_path)
+
+    face_detector_model = dlib.get_frontal_face_detector()
+    classifier = load_model("Emotion_Detection.h5")
+    class_labels = ['angry', 'happy', 'neutral', 'sad', 'surprised']
+
+    images = os.listdir(emotions_image_set)
+    print(f"Images in DB ---> {len(images)}\n")
+    time.sleep(3)
+
+    df = pd.read_csv(emotions_data_set)
+    image_name = list(map(str, list(df["Name"])))
+    image_emotion = list(df["Exp"])
+    image_emotion_pair = {i: j for i, j in zip(image_name, image_emotion)}
+    print("DONE CREATING PAIRS\n")
+    print(f"Images in Excel ---> {len(image_emotion_pair)}\n")
+    time.sleep(3)
+
+    count = 0
+    accuracy = 0
+    error = 0
+    error_list = []
+    for img in images:
+        count += 1
+        print(f"{count}    --->    {img}")
+        image = read_img(f"{emotions_image_set}\\{img}")
+        detected_faces = face_detector_model(image, 1)
+        if not detected_faces:
+            error_list.append(img)
+        for face in detected_faces:
+            top, left = face.top(), face.left()
+            bottom, right = face.bottom(), face.right()
+            image = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
+            face = image[top:bottom, left:right]
+            face = cv.resize(face, (48, 48), interpolation=cv.INTER_AREA)
+            if np.sum([face]):
+                face = face.astype('float') / 255.0
+                face = img_to_array(face)
+                face = np.expand_dims(face, axis=0)
+            prediction = classifier.predict(face)[0]
+            result = class_labels[prediction.argmax()]
+            if result == image_emotion_pair[img]:
+                accuracy += 1
+            else:
+                error += 1
+    total_images = accuracy + error
+
+    print("\n\n-----------------------------------\n")
+    print("          READINGS OF TEST             ")
+    print("\n-----------------------------------\n\n")
+    print(f"TEST CASES     --->   {total_images} IMAGES")
+    print(f"ACCURACY       --->   {accuracy} ({accuracy / total_images} %)")
+    print(f"ERROR          --->   {error} ({error / total_images} %)")
 
 
 if __name__ == "__main__":
@@ -284,8 +336,10 @@ if __name__ == "__main__":
     # path = r".\CASIA_FACE_DATASET"
     # path = r".\NON_FACE_DATASET"
     # path = r".\CUHK_SKETCH_DATASET"
-    sketchPath = r".\sketch_samples"
-    imageDb = r".\image_database"
+    # sketchPath = r".\sketch_samples"
+    # imageDb = r".\image_database"
+    emotionImageSet = r".\emotion_dataset\emotion_imageset"
+    emotionDataSet = r".\emotion_dataset\emotion_dataset.csv"
 
     # CASIA has over 493021 face images of 10570 individuals.
     # Hence, we extract 2 images of every individual i.e. 10570*2 -> 21140 images
@@ -302,21 +356,23 @@ if __name__ == "__main__":
     # end = time.time()
     # print(f"TIME TAKEN TO LOAD HOG MODEL  --->   {(end-start)} seconds")
 
-    # To check performance of Cascade model
+    # To evaluate the performance of Cascade model
     # cascade_test(path)
 
-    # To check performance of HOG model
+    # To evaluate the performance of HOG model
     # hog_test(path)
 
-    # To check the performance of both models on a single image
+    # To evaluate the performance of both models on a single image
     # path_of_image = "./C_NATURAL_IMAGES_DATASET/flower_0752.jpg"
-
     # unit_test(path_of_image)
 
-    # To check sketch recognition performance of Hash algorithm
+    # To evaluate the Sketch Recognition performance of Hash algorithm
     # hash_face_compare_test(sketchPath, imageDb)
 
-    # To check sketch recognition performance of Encodings algorithm
-    encodings_face_compare_test(sketchPath, imageDb)
+    # To evaluate the Sketch Recognition performance of Encodings algorithm
+    # encodings_face_compare_test(sketchPath, imageDb)
+
+    # To evaluate the performance of Emotion Recognition model
+    emotion_classifier_test(emotionImageSet, emotionDataSet)
 
     # print("\n-------- EXIT -----------\n")
