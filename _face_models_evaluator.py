@@ -300,26 +300,31 @@ def emotion_classifier_test(emotions_image_set, emotions_data_set):
     for img in images:
         count += 1
         print(f"{count}    --->    {img}")
-        image = read_img(f"{emotions_image_set}\\{img}")
-        detected_faces = face_detector_model(image, 1)
-        if not detected_faces:
+        try:
+            image = read_img(f"{emotions_image_set}\\{img}")
+            detected_faces = face_detector_model(image, 1)
+            if not detected_faces:
+                error_list.append(img)
+                continue
+            for face in detected_faces:
+                top, left = face.top(), face.left()
+                bottom, right = face.bottom(), face.right()
+                image = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
+                face = image[top:bottom, left:right]
+                face = cv.resize(face, (48, 48), interpolation=cv.INTER_AREA)
+                if np.sum([face]):
+                    face = face.astype('float') / 255.0
+                    face = img_to_array(face)
+                    face = np.expand_dims(face, axis=0)
+                prediction = classifier.predict(face)[0]
+                result = class_labels[prediction.argmax()]
+                if result == image_emotion_pair[img]:
+                    accuracy += 1
+                else:
+                    error += 1
+        except Exception:
             error_list.append(img)
-        for face in detected_faces:
-            top, left = face.top(), face.left()
-            bottom, right = face.bottom(), face.right()
-            image = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
-            face = image[top:bottom, left:right]
-            face = cv.resize(face, (48, 48), interpolation=cv.INTER_AREA)
-            if np.sum([face]):
-                face = face.astype('float') / 255.0
-                face = img_to_array(face)
-                face = np.expand_dims(face, axis=0)
-            prediction = classifier.predict(face)[0]
-            result = class_labels[prediction.argmax()]
-            if result == image_emotion_pair[img]:
-                accuracy += 1
-            else:
-                error += 1
+            error += 1
     total_images = accuracy + error
 
     print("\n\n-----------------------------------\n")
@@ -338,8 +343,8 @@ if __name__ == "__main__":
     # path = r".\CUHK_SKETCH_DATASET"
     # sketchPath = r".\sketch_samples"
     # imageDb = r".\image_database"
-    emotionImageSet = r".\emotion_dataset\emotion_imageset"
-    emotionDataSet = r".\emotion_dataset\emotion_dataset.csv"
+    # emotionImageSet = r".\emotion_dataset\emotion_imageset"
+    # emotionDataSet = r".\emotion_dataset\emotion_dataset.csv"
 
     # CASIA has over 493021 face images of 10570 individuals.
     # Hence, we extract 2 images of every individual i.e. 10570*2 -> 21140 images
@@ -373,6 +378,6 @@ if __name__ == "__main__":
     # encodings_face_compare_test(sketchPath, imageDb)
 
     # To evaluate the performance of Emotion Recognition model
-    emotion_classifier_test(emotionImageSet, emotionDataSet)
+    # emotion_classifier_test(emotionImageSet, emotionDataSet)
 
     # print("\n-------- EXIT -----------\n")
