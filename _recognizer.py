@@ -2,6 +2,7 @@ import cv2 as cv
 import dlib as dl
 import face_recognition
 import os
+import pickle
 
 from keras.models import load_model
 from keras.preprocessing.image import img_to_array
@@ -23,17 +24,36 @@ def read_img(path):
 
 
 def encodings_of_image_database(known_images_db):
+    try:
+        encodings_file = open("encodings_pickle.txt", "rb")
+    except Exception:
+        return "error"
+    try:
+        known_encodings_file, flag = pickle.load(encodings_file), 1
+    except Exception:
+        known_encodings_file, flag = {}, 0
+    encodings_file.close()
+
     known_encodings = []
-    names = os.listdir(known_images_db)
-    for file in names:
+    images = os.listdir(known_images_db)
+    for file in images:
         print("Working.....")
         print(file + "\n")
         img = read_img(known_images_db + file)
         try:
-            encode = face_recognition.face_encodings(img)[0]
+            if flag and known_encodings_file[file].any():
+                encode = known_encodings_file[file]
+            else:
+                encode = face_recognition.face_encodings(img)[0]
+                known_encodings_file[file] = encode
             known_encodings.append(encode)
         except Exception:
+            print(Exception)
             print(f"{known_images_db}{file} does not have a face.")
+
+    encodings_file = open("encodings_pickle.txt", "wb")
+    pickle.dump(known_encodings_file, encodings_file)
+    encodings_file.close()
     return known_encodings
 
 
@@ -67,6 +87,8 @@ def image_sketch_recognizer(sketch):
     if sketch_encode == "error":
         return "no_match"
     known_encodings = encodings_of_image_database(database)
+    if known_encodings == "error":
+        return "no_pickle"
     return image_matching(known_encodings, sketch_encode, database)
 
 

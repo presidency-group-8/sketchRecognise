@@ -109,8 +109,12 @@ def sketch_recognition(flag):
     else:
         dialog_box("success", "Processing !", "This may take a while. Please click OK and wait")
         MainWindow.setWindowTitle("Processing --- Please wait ")
-        if recognizer.image_sketch_recognizer(sketch) == "no_match":
+        result = recognizer.image_sketch_recognizer(sketch)
+        if result == "no_match":
             dialog_box("success", "No match !", "No match found for the uploaded sketch")
+        if result == "no_pickle":
+            dialog_box("error", "File not found !",
+                       "Please create a file named 'encodings_pickle.txt' in the application directory")
         MainWindow.setWindowTitle("Sketch and Emotion Recognition")
 
 
@@ -144,6 +148,7 @@ def goto_resources():
         dialog_box("error", "Something went wrong !", "Sorry we couldn't access your browser. You can visit "
                                                       "https://github.com/presidency-group-8/sketchRecognise "
                                                       "to access resources.")
+
 
 def goto_page(self, page):
     self.slide_left_panel()
