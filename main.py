@@ -1,6 +1,7 @@
 import sys
 import os
 import time
+import pickle
 import webbrowser
 
 from PyQt5.QtCore import QPropertyAnimation
@@ -58,13 +59,39 @@ def move_to_database():
     source = get_img()
     if source:
         database = "image_database/"
-        source, database = source.replace("/", "\\"), database.replace("/", "\\")
         if dialog_box("question", "Sure ?", "Do you want to upload your selection?") == 16384:
-            error = os.system(f'copy "{source}" "{database}"')
+            if os.path.exists(f"{database}{source.split('/')[-1]}"):
+                replace = dialog_box("question", "File already exists!",
+                           "The filename that you are trying to upload currently exists in the database."
+                           "Would you like to replace it")
+
+                if replace == 16384:
+                    try:
+                        encodings_file = open("encodings_pickle.txt", "rb")
+                        known_encodings_file = pickle.load(encodings_file)
+                        encodings_file.close()
+                        known_encodings_file.pop(source.split('/')[-1], 0)
+                        encodings_file = open("encodings_pickle.txt", "wb")
+                        pickle.dump(known_encodings_file, encodings_file)
+                        encodings_file.close()
+                        source, database = source.replace("/", "\\"), database.replace("/", "\\")
+                        error = os.system(f'copy "{source}" "{database}"')
+                    except Exception:
+                        dialog_box("error", "File not found !",
+                                   "Please create a file named 'encodings_pickle.txt' in the application directory")
+                        return
+                else:
+                    return
+
+            else:
+                source, database = source.replace("/", "\\"), database.replace("/", "\\")
+                error = os.system(f'copy "{source}" "{database}"')
+
             if not error:
                 dialog_box("success", "Success !", "The image has been uploaded into the database successfully")
             else:
                 dialog_box("error", "Error !", "There was some error while accessing the database")
+
     return None
 
 
@@ -135,7 +162,7 @@ def emotion_recognition(flag):
 def exit_app():
     MainWindow.setWindowTitle("Exiting ---")
     time.sleep(2)
-    QtCore.QCoreApplication.instance().quit()
+    sys.exit(app.exec_())
 
 
 # Goto project source

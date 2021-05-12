@@ -41,14 +41,15 @@ def encodings_of_image_database(known_images_db):
         print(file + "\n")
         img = read_img(known_images_db + file)
         try:
-            if flag and known_encodings_file[file].any():
+            temp_res = known_encodings_file.get(file, "error")
+            if flag and len(temp_res) == 128:
                 encode = known_encodings_file[file]
             else:
                 encode = face_recognition.face_encodings(img)[0]
                 known_encodings_file[file] = encode
             known_encodings.append(encode)
         except Exception:
-            print(Exception)
+            os.remove(f"{known_images_db}{file}")
             print(f"{known_images_db}{file} does not have a face.")
 
     encodings_file = open("encodings_pickle.txt", "wb")
@@ -207,3 +208,5 @@ def live_emotion_recognizer():
         if cv.waitKey(10) == ord('q'):
             cv.destroyAllWindows()
             break
+
+# encodings_of_image_database(r"C:\Users\aryap\Documents\Python Scripts\sketchRecognise\image_database\\")
