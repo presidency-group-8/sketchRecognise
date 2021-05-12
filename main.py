@@ -338,6 +338,7 @@ class UserInterface(object):
         self.sketch_body.setStyleSheet(f"border:none; font-size:20px; color: rgb(255,255,0);")
         self.sketch_body.setText("Please upload the Sketch first using UPLOAD SKETCH."
                                  "\nTo recognize the person in the sketch use START RECOGNITION."
+                                 "\nTo recognize the person in the sketch in a video use VIDEO RECOGNITION."
                                  "\nTo recognize the sketch live use LIVE RECOGNITION.")
         self.sketch_body.setObjectName("sketch_body")
         # Sketch Browse Button
